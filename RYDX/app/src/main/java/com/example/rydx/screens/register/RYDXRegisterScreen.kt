@@ -1,9 +1,15 @@
 package com.example.rydx.screens.register
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -12,11 +18,16 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.rydx.R
 import com.example.rydx.navigation.RYDXScreens
 
 @Preview
@@ -42,6 +53,8 @@ fun RYDXRegisterScreen(navController: NavController = NavController(context = Lo
 
             Spacer(modifier = Modifier.height(25.dp))
             Logo()
+            Spacer(modifier = Modifier.height(55.dp))
+            UserForm()
         }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -98,7 +111,6 @@ fun SubmitButton(textId: String,
 
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun UserForm() {
     val email = rememberSaveable {
@@ -108,13 +120,99 @@ fun UserForm() {
         mutableStateOf("")
     }
     val phoneNumber = rememberSaveable {
-        mutableStateOf(0)
+        mutableStateOf("")
     }
     val valid = remember(email.value, userName.value,phoneNumber.value) {
         email.value.trim().isNotEmpty() && userName.value.trim().isNotEmpty()
-                && phoneNumber.value!=0
+                && phoneNumber.value.trim().isNotEmpty()
     }
+    Column(Modifier
+        .height(250.dp)
+        .background(MaterialTheme.colors.background)
+        .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally) {
 
-
-
+    UserNameInput(nameState = userName, onAction = KeyboardActions {
+    })
+    NumberInput(numberState = phoneNumber, onAction = KeyboardActions {
+    })
+    EmailInput(emailState = email, onAction = KeyboardActions {
+    })
+    }
 }
+@Composable
+fun EmailInput(
+    modifier: Modifier = Modifier,
+    emailState: MutableState<String>,
+    labelId: String = "E-mail",
+    imeAction: ImeAction = ImeAction.Next,
+    onAction: KeyboardActions = KeyboardActions.Default
+) {
+    InputField(
+        modifier = modifier,
+        valueState = emailState,
+        labelId = labelId,
+        keyboardType = KeyboardType.Email,
+        imeAction = imeAction,
+        onAction = onAction
+    )
+}
+@Composable
+fun NumberInput(
+    modifier: Modifier = Modifier,
+    numberState: MutableState<String>,
+    labelId: String = "Phone Number",
+    imeAction: ImeAction = ImeAction.Next,
+    onAction: KeyboardActions = KeyboardActions.Default
+) {
+    InputField(
+        modifier = modifier,
+        valueState = numberState,
+        labelId = labelId,
+        keyboardType = KeyboardType.Text,
+        imeAction = imeAction,
+        onAction = onAction
+    )
+}
+
+@Composable
+fun UserNameInput(
+    modifier: Modifier = Modifier,
+    nameState: MutableState<String>,
+    labelId: String = "User Name",
+    imeAction: ImeAction = ImeAction.Next,
+    onAction: KeyboardActions = KeyboardActions.Default
+) {
+    InputField(
+        modifier = modifier,
+        valueState = nameState,
+        labelId = labelId,
+        keyboardType = KeyboardType.Text,
+        imeAction = imeAction,
+        onAction = onAction
+    )
+}
+@Composable
+fun InputField(
+    modifier: Modifier = Modifier,
+    valueState: MutableState<String>,
+    labelId: String,
+    isSingleLine: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Next,
+    onAction: KeyboardActions = KeyboardActions.Default
+) {
+    OutlinedTextField(
+        value = valueState.value, onValueChange = { valueState.value = it },
+        label = { Text(text = labelId) },
+        singleLine = isSingleLine,
+        textStyle = TextStyle(fontSize = 18.sp),
+        modifier = modifier
+            .padding(10.dp)
+            .fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        keyboardActions = onAction
+    )
+}
+
+
