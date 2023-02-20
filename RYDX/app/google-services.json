@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "670789345186",
+    "project_id": "rydx-89388",
+    "storage_bucket": "rydx-89388.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:670789345186:android:6e6f5a05ca7d60f5d45cfb",
+        "android_client_info": {
+          "package_name": "com.example.rydx"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "670789345186-4fc34prh8r35n56s337of9qk1jpbjajb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZM6FeiOPlTpnBBzCB6an-ywSpHxWN_FI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "670789345186-4fc34prh8r35n56s337of9qk1jpbjajb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
