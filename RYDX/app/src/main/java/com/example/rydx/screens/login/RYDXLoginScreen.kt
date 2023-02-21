@@ -1,12 +1,12 @@
 package com.example.rydx.screens.login
 
-import androidx.compose.foundation.background
+import android.app.Activity
+import android.content.Context
+import android.text.TextUtils
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -14,68 +14,246 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.rydx.navigation.RYDXScreens
+import com.google.firebase.FirebaseException
+import com.google.firebase.auth.*
+import java.util.concurrent.TimeUnit
 
 @Preview
 @Composable
 fun  RYDXLoginScreen(navController: NavController = NavController(context = LocalContext.current)){
+    val stateIndication = rememberSaveable {
+        mutableStateOf("")
+    }
+    val phoneNumber = rememberSaveable {
+        mutableStateOf("")
+    }
+    val otp = remember {
+        mutableStateOf("")
+    }
 
+    val verificationID = remember {
+        mutableStateOf("")
+    }
+
+    val message = remember {
+        mutableStateOf("")
+    }
+    // on below line creating variable
+    // for firebase auth and callback
+    val mAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    lateinit var callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks
     Surface(modifier = Modifier.fillMaxSize(),color= Color.White) {
         Column(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top
         ) {
             Button(
-                onClick = { navController.navigate(RYDXScreens.OpeningScreen.name)},
+                onClick = { navController.navigate(RYDXScreens.OpeningScreen.name) },
                 modifier = Modifier
                     .padding(5.dp)
                     .width(40.dp),
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
                 contentPadding = PaddingValues(1.dp)
             ) {
-                Text(text = "<",color = Color.Black,
-                    fontSize =30.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "<", color = Color.Black,
+                    fontSize = 30.sp, fontWeight = FontWeight.Bold
+                )
             }
             Spacer(modifier = Modifier.height(25.dp))
             Logo()
             Spacer(modifier = Modifier.height(100.dp))
-            UserForm()
+            Row() {
+                TextField(
+                    value = stateIndication.value,
+                    // on below line specifying key board type as number.
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+
+                    onValueChange = { stateIndication.value = it },
+
+                    placeholder = { Text(text = "C") },
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .width(70.dp),
+                    textStyle = TextStyle(fontSize = 18.sp),
+                    singleLine = true,
+                )
+
+
+                TextField(
+                    value = phoneNumber.value,
+                    // on below line specifying key board type as number.
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+
+                    onValueChange = { phoneNumber.value = it },
+
+                    placeholder = { Text(text = "Enter your phone number") },
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth(),
+                    textStyle = TextStyle(fontSize = 18.sp),
+                    singleLine = true,
+                )
+
+            }
+
         }
+        //----------------------
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Spacer(modifier = Modifier.height(80.dp))
+            TextField(
+                // on below line we are specifying
+                // value for our course duration text field.
+                value = otp.value,
+                //specifying key board on below line.
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                // on below line we are adding on
+                // value change for text field.
+                onValueChange = { otp.value = it },
+
+                // on below line we are adding place holder
+                // as text as "Enter your course duration"
+                placeholder = { Text(text = "Enter your otp") },
+
+                // on below line we are adding modifier to it
+                // and adding padding to it and filling max width
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fillMaxWidth(),
+
+                // on below line we are adding text style
+                // specifying color and font size to it.
+                textStyle = TextStyle(color = Color.Black, fontSize = 15.sp),
+
+                // on below line we are adding
+                // single line to it.
+                singleLine = true,
+            )
+
+            // adding spacer on below line.
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // on below line creating button to add
+            // data to firebase firestore database.
+            Button(
+                onClick = {
+                    // on below line we are validating
+                    // user input parameters.
+                    if (TextUtils.isEmpty(otp.value)) {
+                        // displaying toast message on below line.
+                        Toast.makeText(navController.context, "Please enter otp..", Toast.LENGTH_SHORT).show()
+                    } else {
+                        // on below line generating phone credentials.
+                        val credential: PhoneAuthCredential = PhoneAuthProvider.getCredential(
+                            verificationID.value, otp.value
+                        )
+                        // on below line signing within credentials.
+                        signInWithPhoneAuthCredential(
+                            credential,
+                            mAuth,
+                            navController.context as Activity,
+                            navController.context,
+                            message
+                        )
+                    }
+                },
+                // on below line we are
+                // adding modifier to our button.
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(5.dp)
+            ) {
+                // on below line we are adding text for our button
+                Text(text = "Verify OTP", modifier = Modifier.padding(5.dp))
+            }
+
+            // on below line adding spacer.
+            Spacer(modifier = Modifier.height(5.dp))
+
+            Text(
+                // on below line displaying message for verification status.
+                text = message.value,
+                style = TextStyle(color = Color.Green, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            )
+
+
+
+        callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+            override fun onVerificationCompleted(p0: PhoneAuthCredential) {
+                // on below line updating message
+                // and displaying toast message
+                message.value = "Verification successful"
+                Toast.makeText(navController.context, "Verification successful..", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onVerificationFailed(p0: FirebaseException) {
+                // on below line displaying error as toast message.
+                message.value = "Fail to verify user : \n" + p0.message
+                Toast.makeText(navController.context, "Verification failed..", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onCodeSent(verificationId: String, p1: PhoneAuthProvider.ForceResendingToken) {
+                // this method is called when code is send
+                super.onCodeSent(verificationId, p1)
+                verificationID.value = verificationId
+            }
+        }
+        }
+        //-----------------
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
         ) {
             SubmitButton("Login",
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black), onClick = {
-                    navController.navigate(RYDXScreens.OTPVerificationScreen.name)})
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black),
+                onClick = {
+
+                        if (TextUtils.isEmpty(phoneNumber.value)) {
+                            Toast.makeText(navController.context,"Please enter phone number..", Toast.LENGTH_SHORT) .show()
+                        } else {
+
+                            val number = stateIndication.value + phoneNumber.value
+                            // on below line calling method to generate verification code.
+                            sendVerificationCode(number, mAuth, navController.context as Activity, callbacks)
+                        }
+
+                    //navController.navigate(RYDXScreens.OTPVerificationScreen.name)
+                }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
-            Row(modifier = Modifier.padding(15.dp)) {
-                Text(text = "Don't have an account?",color = Color.Black)
-                Text("Register Now",
-                    modifier = Modifier
-                        .clickable {
-                            navController.navigate(RYDXScreens.RegisterScreen.name)
-                        }
-                        .padding(start = 5.dp),
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black)
-            }
+            register(navController)
         }
     }
+}
 
+@Composable
+private fun register(navController: NavController) {
+    Row(modifier = Modifier.padding(15.dp)) {
+        Text(text = "Don't have an account?", color = Color.Black)
+        Text("Register Now",
+            modifier = Modifier
+                .clickable {
+                    navController.navigate(RYDXScreens.RegisterScreen.name)
+                }
+                .padding(start = 5.dp),
+            fontWeight = FontWeight.Bold,
+            color = Color.Black)
+    }
 }
 
 
@@ -93,7 +271,7 @@ fun SubmitButton(textId: String,
                  colors: ButtonColors,
                  onClick: () -> Unit) {
     Button(
-        onClick = onClick,
+        onClick =onClick,
         modifier = Modifier
             .padding(3.dp)
             .fillMaxWidth(),
@@ -105,84 +283,51 @@ fun SubmitButton(textId: String,
     ) {
         Text(text = textId,color = Color.White, modifier = Modifier.padding(5.dp))
     }
-
 }
 
-@Composable
-fun UserForm() {
-    val stateIndication = rememberSaveable {
-        mutableStateOf("")
-    }
-    val phoneNumber = rememberSaveable {
-        mutableStateOf("")
-    }
-    val valid = remember(stateIndication.value,phoneNumber.value) {
-        stateIndication.value.trim().isNotEmpty() && phoneNumber.value.trim().isNotEmpty()
-    }
-
-
-    Row() {
-        stateIndicationInput(stateIndication = stateIndication, onAction = KeyboardActions {
-        })
-
-        NumberInput(numberState = phoneNumber, onAction = KeyboardActions {
-        })
-
-    }
-}
-
-@Composable
-fun stateIndicationInput(
-    stateIndication: MutableState<String>,
-    labelId: String = ".",
-    imeAction: ImeAction = ImeAction.Next,
-    onAction: KeyboardActions = KeyboardActions.Default
+// on below line creating method to
+// sign in with phone credentuals.
+private fun signInWithPhoneAuthCredential(
+    credential: PhoneAuthCredential,
+    auth: FirebaseAuth,
+    activity: Activity,
+    context: Context,
+    message: MutableState<String>
 ) {
-    InputField(
-        modifier=Modifier.padding(10.dp).width(70.dp),
-        valueState = stateIndication,
-        labelId = labelId,
-        keyboardType = KeyboardType.Text,
-        imeAction = imeAction,
-        onAction = onAction
-    )
+    // on below line signing with credentials.
+    auth.signInWithCredential(credential)
+        .addOnCompleteListener(activity) { task ->
+
+            if (task.isSuccessful) {
+                message.value = "Verification successful"
+                Toast.makeText(context, "Verification successful..", Toast.LENGTH_SHORT).show()
+            } else {
+                if (task.exception is FirebaseAuthInvalidCredentialsException) {
+
+                    Toast.makeText(
+                        context,
+                        "Verification failed.." + (task.exception as FirebaseAuthInvalidCredentialsException).message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
 }
-@Composable
-fun NumberInput(
-    numberState: MutableState<String>,
-    labelId: String = "Phone Number",
-    imeAction: ImeAction = ImeAction.Next,
-    onAction: KeyboardActions = KeyboardActions.Default
+
+
+private fun sendVerificationCode(
+    number: String,
+    auth: FirebaseAuth,
+    activity: Activity,
+    callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks
 ) {
-    InputField(
-        modifier = Modifier.padding(10.dp).fillMaxWidth(),
-        valueState = numberState,
-        labelId = labelId,
-        keyboardType = KeyboardType.Text,
-        imeAction = imeAction,
-        onAction = onAction
-    )
+    // on below line generating options for verification code
+    val options = PhoneAuthOptions.newBuilder(auth)
+        .setPhoneNumber(number) // Phone number to verify
+        .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
+        .setActivity(activity) // Activity (for callback binding)
+        .setCallbacks(callbacks) // OnVerificationStateChangedCallbacks
+        .build()
+    PhoneAuthProvider.verifyPhoneNumber(options)
 }
-
-
-@Composable
-fun InputField(
-    modifier: Modifier = Modifier,
-    valueState: MutableState<String>,
-    labelId: String,
-    isSingleLine: Boolean = true,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    imeAction: ImeAction = ImeAction.Next,
-    onAction: KeyboardActions = KeyboardActions.Default
-) {
-    OutlinedTextField(modifier=modifier,
-        value = valueState.value, onValueChange = { valueState.value = it },
-        label = { Text(text = labelId) },
-        singleLine = isSingleLine,
-        textStyle = TextStyle(fontSize = 18.sp),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
-        keyboardActions = onAction
-    )
-}
-
 

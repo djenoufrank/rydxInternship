@@ -26,5 +26,6 @@ fun RYDXNavigation() {
         composable(RYDXScreens.LoginScreen.name){
             RYDXLoginScreen(navController=navController)
         }
+
     }
 }

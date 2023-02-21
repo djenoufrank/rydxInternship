@@ -122,10 +122,10 @@ fun UserForm() {
     val phoneNumber = rememberSaveable {
         mutableStateOf("")
     }
-    val valid = remember(email.value, userName.value,phoneNumber.value) {
-        email.value.trim().isNotEmpty() && userName.value.trim().isNotEmpty()
-                && phoneNumber.value.trim().isNotEmpty()
-    }
+//    val valid = remember(email.value, userName.value,phoneNumber.value) {
+//        email.value.trim().isNotEmpty() && userName.value.trim().isNotEmpty()
+//                && phoneNumber.value.trim().isNotEmpty()
+//    }
     Column(Modifier
         .height(250.dp)
         .background(MaterialTheme.colors.background)
