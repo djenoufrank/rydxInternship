@@ -1,5 +1,7 @@
 package com.example.rydx.screens.register
 
+import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -54,15 +56,12 @@ fun RYDXRegisterScreen(navController: NavController = NavController(context = Lo
             Spacer(modifier = Modifier.height(25.dp))
             Logo()
             Spacer(modifier = Modifier.height(55.dp))
-            UserForm()
+            UserForm(navController)
         }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
         ) {
-            SubmitButton("Register",
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black), onClick = {
-                    navController.navigate(RYDXScreens.OTPVerificationScreen.name)})
 
             Spacer(modifier = Modifier.height(20.dp))
             Row(modifier = Modifier.padding(15.dp)) {
@@ -112,7 +111,7 @@ fun SubmitButton(textId: String,
 }
 
 @Composable
-fun UserForm() {
+fun UserForm(navController: NavController) {
     val email = rememberSaveable {
         mutableStateOf("")
     }
@@ -122,10 +121,11 @@ fun UserForm() {
     val phoneNumber = rememberSaveable {
         mutableStateOf("")
     }
-//    val valid = remember(email.value, userName.value,phoneNumber.value) {
-//        email.value.trim().isNotEmpty() && userName.value.trim().isNotEmpty()
-//                && phoneNumber.value.trim().isNotEmpty()
-//    }
+    val valid = remember(email.value, userName.value,phoneNumber.value) {
+        email.value.trim().isNotEmpty() && userName.value.trim().isNotEmpty()
+                && phoneNumber.value.trim().isNotEmpty() && Patterns.EMAIL_ADDRESS
+            .matcher(email.value).matches()
+    }
     Column(Modifier
         .height(250.dp)
         .background(MaterialTheme.colors.background)
@@ -139,6 +139,19 @@ fun UserForm() {
     EmailInput(emailState = email, onAction = KeyboardActions {
     })
     }
+
+    SubmitButton("Register",
+        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black), onClick = {
+            if(valid){
+                navController.navigate(RYDXScreens.OTPVerificationScreen.name)
+            }else{
+                Toast.makeText(navController.context,
+                    "Please check your entries!",
+                    Toast.LENGTH_LONG).show()
+            }
+        }
+
+    )
 }
 @Composable
 fun EmailInput(

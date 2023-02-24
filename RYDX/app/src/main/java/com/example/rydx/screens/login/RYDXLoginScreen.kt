@@ -45,6 +45,7 @@ private var number:String = ""
 @Composable
 fun  RYDXLoginScreen(navController: NavController = NavController(context = LocalContext.current)){
     listenForUsersUpdates(navController)
+
     val stateIndication = rememberSaveable {
         mutableStateOf("")
     }
@@ -171,8 +172,14 @@ fun ToOtp(otp: MutableState<String>, navController: NavController,
         OtpFields(otp, navController, verificationID, mAuth, message)
         callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             override fun onVerificationCompleted(p0: PhoneAuthCredential) {
-                message.value = "Verification successful"
-                Toast.makeText(navController.context, "Verification successful..", Toast.LENGTH_SHORT).show()
+                if (myFirestoreUser.connexionUsersValueChanges(number)) {
+                    myFirestoreUser.stopListeningForUserChanges()
+                    navController.navigate(RYDXScreens.HomeScreen.name)
+                } else {
+                    Toast.makeText(navController.context,
+                        "we don't know number,click Register Now",
+                        Toast.LENGTH_LONG).show()
+                }
             }
 
             override fun onVerificationFailed(p0: FirebaseException) {
@@ -305,15 +312,8 @@ private fun signInWithPhoneAuthCredential(
         .addOnCompleteListener(activity) { task ->
 
             if (task.isSuccessful) {
-                var isUser = false
-                for (item in userListFireBase) {
-                    if (number == item.phoneNumber) {
-                        isUser = true
-                    }
 
-                }
-              // Log.d("fd","number is $number")
-                if (isUser) {
+                if (myFirestoreUser.connexionUsersValueChanges(number)) {
                     myFirestoreUser.stopListeningForUserChanges()
                     navController.navigate(RYDXScreens.HomeScreen.name)
                 } else {
@@ -326,7 +326,7 @@ private fun signInWithPhoneAuthCredential(
 
                     Toast.makeText(
                         context,
-                        "Verification failed.." + (task.exception as FirebaseAuthInvalidCredentialsException).message,
+                        "Verification failed!" + (task.exception as FirebaseAuthInvalidCredentialsException).message,
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -353,7 +353,7 @@ private fun sendVerificationCode(
 private fun listenForUsersUpdates(navController: NavController) {
     myFirestoreUser.onUsersValuesChange()
        .observe(navController.context as MainActivity, Observer(::onUsersUpdate))
-    //(navController.context as MainActivity).toast()
+    (navController.context as MainActivity).toast()
 }
 private fun onUsersUpdate(users: List<User>) {
     userListFireBase.clear()
