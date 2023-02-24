@@ -6,8 +6,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.rydx.screens.register.RYDXRegisterScreen
 import com.example.rydx.screens.RYDXSplashScreen
+import com.example.rydx.screens.home.RYDXHomeScreen
 import com.example.rydx.screens.login.RYDXLoginScreen
 import com.example.rydx.screens.opening.RYDXOpeningScreen
+import com.example.rydx.screens.otp.RYDXOTPVerificationScreen
 
 @Composable
 fun RYDXNavigation() {
@@ -26,6 +28,11 @@ fun RYDXNavigation() {
         composable(RYDXScreens.LoginScreen.name){
             RYDXLoginScreen(navController=navController)
         }
-
+        composable(RYDXScreens.OTPVerificationScreen.name){
+            RYDXOTPVerificationScreen(navController=navController)
+        }
+        composable(RYDXScreens.HomeScreen.name){
+            RYDXHomeScreen(navController=navController)
+        }
     }
 }

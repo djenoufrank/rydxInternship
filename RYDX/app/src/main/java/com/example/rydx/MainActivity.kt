@@ -1,6 +1,11 @@
 package com.example.rydx
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +29,34 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+//    fun toast() {
+//        if (!isNetworkAvailable()) {
+//            Toast.makeText(this, "you are not longer connected", Toast.LENGTH_SHORT).show()
+//        }
+//
+//    }
+//    fun isNetworkAvailable(): Boolean {
+//        return isNetworkAvailable(this)
+//    }
+//    private fun isNetworkAvailable(context: Context): Boolean {
+//        val connectivityManager =
+//            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            val nw = connectivityManager.activeNetwork ?: return false
+//            val actNw = connectivityManager.getNetworkCapabilities(nw) ?: return false
+//            return when {
+//                actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+//                actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+//                //for other device how are able to connect with Ethernet
+//                actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+//                //for check internet over Bluetooth
+//                actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
+//                else -> false
+//            }
+//        } else {
+//            return connectivityManager.activeNetworkInfo?.isConnected ?: false
+//        }
+//    }
 }
 
 @Composable
@@ -35,5 +68,4 @@ fun RYDXApp(){
             RYDXNavigation()
     }
 }
-
 

@@ -3,6 +3,7 @@ package com.example.rydx.screens.login
 import android.app.Activity
 import android.content.Context
 import android.text.TextUtils
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,18 +24,27 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Observer
 import androidx.navigation.NavController
+import com.example.rydx.MainActivity
+import com.example.rydx.models.User
 import com.example.rydx.navigation.RYDXScreens
+import com.example.rydx.viewModels.CloudFirebaseUserViewModel
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.*
+import com.google.firebase.firestore.ListenerRegistration
 import java.util.concurrent.TimeUnit
 
 val mAuth: FirebaseAuth = FirebaseAuth.getInstance()
 lateinit var callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks
+private var userListFireBase = mutableListOf<User>()
+private val myFirestoreUser by lazy { CloudFirebaseUserViewModel() }
+private var number:String = ""
 
 @Preview
 @Composable
 fun  RYDXLoginScreen(navController: NavController = NavController(context = LocalContext.current)){
+    listenForUsersUpdates(navController)
     val stateIndication = rememberSaveable {
         mutableStateOf("")
     }
@@ -92,7 +102,7 @@ private fun Submit(
                 ).show()
             } else {
 
-                val number = stateIndication.value + phoneNumber.value
+                number = stateIndication.value + phoneNumber.value
                 //navController.navigate(RYDXScreens.OTPVerificationScreen.name)
                 sendVerificationCode(number, mAuth, navController.context as Activity, callbacks)
             }
@@ -116,6 +126,7 @@ private fun BackButton(navController: NavController) {
         )
     }
 }
+
 
 @Composable
 private fun PhoneNumberInput(
@@ -160,14 +171,11 @@ fun ToOtp(otp: MutableState<String>, navController: NavController,
         OtpFields(otp, navController, verificationID, mAuth, message)
         callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             override fun onVerificationCompleted(p0: PhoneAuthCredential) {
-                // on below line updating message
-                // and displaying toast message
                 message.value = "Verification successful"
                 Toast.makeText(navController.context, "Verification successful..", Toast.LENGTH_SHORT).show()
             }
 
             override fun onVerificationFailed(p0: FirebaseException) {
-                // on below line displaying error as toast message.
                 message.value = "Fail to verify user : \n" + p0.message
                 Toast.makeText(navController.context, "Verification failed..", Toast.LENGTH_SHORT).show()
             }
@@ -190,45 +198,23 @@ private fun OtpFields(
     message: MutableState<String>
 ) {
     TextField(
-        // on below line we are specifying
-        // value for our course duration text field.
         value = otp.value,
-        //specifying key board on below line.
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        // on below line we are adding on
-        // value change for text field.
         onValueChange = { otp.value = it },
 
-        // on below line we are adding place holder
-        // as text as "Enter your course duration"
         placeholder = { Text(text = "Enter your otp") },
 
-        // on below line we are adding modifier to it
-        // and adding padding to it and filling max width
         modifier = Modifier
             .padding(5.dp)
             .fillMaxWidth(),
-
-        // on below line we are adding text style
-        // specifying color and font size to it.
         textStyle = TextStyle(color = Color.Black, fontSize = 15.sp),
-
-        // on below line we are adding
-        // single line to it.
         singleLine = true,
     )
 
-    // adding spacer on below line.
     Spacer(modifier = Modifier.height(10.dp))
-
-    // on below line creating button to add
-    // data to firebase firestore database.
     Button(
         onClick = {
-            // on below line we are validating
-            // user input parameters.
             if (TextUtils.isEmpty(otp.value)) {
-                // displaying toast message on below line.
                 Toast.makeText(navController.context, "Please enter otp..", Toast.LENGTH_SHORT)
                     .show()
             } else {
@@ -236,31 +222,26 @@ private fun OtpFields(
                 val credential: PhoneAuthCredential = PhoneAuthProvider.getCredential(
                     verificationID.value, otp.value
                 )
-                // on below line signing within credentials.
                 signInWithPhoneAuthCredential(
                     credential,
                     mAuth,
                     navController.context as Activity,
                     navController.context,
-                    message
+                    navController
                 )
             }
         },
-        // on below line we are
-        // adding modifier to our button.
         modifier = Modifier
             .fillMaxWidth()
-            .padding(5.dp)
+            .padding(5.dp),
+        colors=ButtonDefaults.buttonColors(backgroundColor = Color.Black)
     ) {
-        // on below line we are adding text for our button
-        Text(text = "Verify OTP", modifier = Modifier.padding(5.dp))
+        Text(text = "Verify OTP", color = Color.White, modifier = Modifier.padding(5.dp))
     }
 
-    // on below line adding spacer.
     Spacer(modifier = Modifier.height(5.dp))
 
     Text(
-        // on below line displaying message for verification status.
         text = message.value,
         style = TextStyle(color = Color.Green, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     )
@@ -317,15 +298,29 @@ private fun signInWithPhoneAuthCredential(
     auth: FirebaseAuth,
     activity: Activity,
     context: Context,
-    message: MutableState<String>
+    navController: NavController
 ) {
     // on below line signing with credentials.
     auth.signInWithCredential(credential)
         .addOnCompleteListener(activity) { task ->
 
             if (task.isSuccessful) {
-                message.value = "Verification successful"
-                Toast.makeText(context, "Verification successful..", Toast.LENGTH_SHORT).show()
+                var isUser = false
+                for (item in userListFireBase) {
+                    if (number == item.phoneNumber) {
+                        isUser = true
+                    }
+
+                }
+              // Log.d("fd","number is $number")
+                if (isUser) {
+                    myFirestoreUser.stopListeningForUserChanges()
+                    navController.navigate(RYDXScreens.HomeScreen.name)
+                } else {
+                    Toast.makeText(activity,
+                        "we don't know number,click Register Now",
+                        Toast.LENGTH_LONG).show()
+                }
             } else {
                 if (task.exception is FirebaseAuthInvalidCredentialsException) {
 
@@ -348,11 +343,21 @@ private fun sendVerificationCode(
 ) {
     // on below line generating options for verification code
     val options = PhoneAuthOptions.newBuilder(auth)
-        .setPhoneNumber(number) // Phone number to verify
-        .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
-        .setActivity(activity) // Activity (for callback binding)
-        .setCallbacks(callbacks) // OnVerificationStateChangedCallbacks
+        .setPhoneNumber(number)
+        .setTimeout(60L, TimeUnit.SECONDS)
+        .setActivity(activity)
+        .setCallbacks(callbacks)
         .build()
     PhoneAuthProvider.verifyPhoneNumber(options)
 }
-
+private fun listenForUsersUpdates(navController: NavController) {
+    myFirestoreUser.onUsersValuesChange()
+       .observe(navController.context as MainActivity, Observer(::onUsersUpdate))
+    //(navController.context as MainActivity).toast()
+}
+private fun onUsersUpdate(users: List<User>) {
+    userListFireBase.clear()
+    for (user in users) {
+        userListFireBase.add(user)
+    }
+}
