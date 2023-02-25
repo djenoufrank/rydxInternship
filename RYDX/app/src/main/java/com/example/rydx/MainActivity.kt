@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.rydx.navigation.RYDXNavigation
 import com.example.rydx.ui.theme.RYDXTheme
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,43 +30,52 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    fun toast() {
-        if (!isNetworkAvailable()) {
-            Toast.makeText(this, "you are not longer connected", Toast.LENGTH_SHORT).show()
-        }
-
-    }
-    private fun isNetworkAvailable(): Boolean {
+//    fun toast() {
+//        if (!isNetworkAvailable()) {
+//            Toast.makeText(this, "you are not longer connected", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+    fun isNetworkAvailable(): Boolean {
         return isNetworkAvailable(this)
     }
+
     private fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val nw = connectivityManager.activeNetwork ?: return false
-            val actNw = connectivityManager.getNetworkCapabilities(nw) ?: return false
-            return when {
-                actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-                actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-                //for other device how are able to connect with Ethernet
-                actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
-                //for check internet over Bluetooth
-                actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
-                else -> false
-            }
-        } else {
-            return connectivityManager.activeNetworkInfo?.isConnected ?: false
+        val nw = connectivityManager.activeNetwork ?: return false
+        val actNw = connectivityManager.getNetworkCapabilities(nw) ?: return false
+        return when {
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            //for other device how are able to connect with Ethernet
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+            //for check internet over Bluetooth
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> true
+            else -> false
         }
+    }
+
+    fun isValidPhoneNumber(phoneNumber: String): Boolean {
+        if (phoneNumber.length < 10 || phoneNumber.length > 12) return false
+        if (phoneNumber[0] != '+') return false
+
+        for (i in 1 until phoneNumber.length) {
+            if (!Character.isDigit(phoneNumber[i])) {
+                return false
+            }
+        }
+        return true
     }
 }
 
 @Composable
-fun RYDXApp(){
+fun RYDXApp() {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colors.background
     ) {
-            RYDXNavigation()
+        RYDXNavigation()
     }
 }
+
 

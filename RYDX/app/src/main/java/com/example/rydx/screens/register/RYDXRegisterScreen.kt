@@ -29,28 +29,38 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.rydx.MainActivity
 import com.example.rydx.R
+import com.example.rydx.models.User
 import com.example.rydx.navigation.RYDXScreens
+import com.example.rydx.viewModels.CloudFirebaseUserViewModel
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.delay
+
+private val myFirestoreUser by lazy { CloudFirebaseUserViewModel() }
 
 @Preview
 @Composable
-fun RYDXRegisterScreen(navController: NavController = NavController(context = LocalContext.current)){
+fun RYDXRegisterScreen(navController: NavController = NavController(context = LocalContext.current)) {
 
-    Surface(modifier = Modifier.fillMaxSize(),color= Color.White) {
+    Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
         Column(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top
         ) {
             Button(
-                onClick = { navController.navigate(RYDXScreens.OpeningScreen.name)},
+                onClick = { navController.navigate(RYDXScreens.OpeningScreen.name) },
                 modifier = Modifier
                     .padding(5.dp)
                     .width(40.dp),
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
                 contentPadding = PaddingValues(1.dp)
             ) {
-                Text(text = "<",color = Color.Black,
-                fontSize =30.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "<", color = Color.Black,
+                    fontSize = 30.sp, fontWeight = FontWeight.Bold
+                )
             }
 
             Spacer(modifier = Modifier.height(25.dp))
@@ -65,7 +75,7 @@ fun RYDXRegisterScreen(navController: NavController = NavController(context = Lo
 
             Spacer(modifier = Modifier.height(20.dp))
             Row(modifier = Modifier.padding(15.dp)) {
-                Text(text = "Already have an account?",color = Color.Black)
+                Text(text = "Already have an account?", color = Color.Black)
                 Text("LogIn Now",
                     modifier = Modifier
                         .clickable {
@@ -91,21 +101,24 @@ fun Logo() {
 }
 
 @Composable
-fun SubmitButton(textId: String,
-                 colors: ButtonColors,
-                 onClick: () -> Unit) {
+fun SubmitButton(
+    textId: String,
+    colors: ButtonColors,
+    onClick: () -> Unit
+) {
     Button(
         onClick = onClick,
         modifier = Modifier
             .padding(3.dp)
             .fillMaxWidth(),
-        elevation =  ButtonDefaults.elevation(
+        elevation = ButtonDefaults.elevation(
             defaultElevation = 10.dp,
             pressedElevation = 15.dp,
-            disabledElevation = 0.dp),
-        colors =colors
+            disabledElevation = 0.dp
+        ),
+        colors = colors
     ) {
-            Text(text = textId,color = Color.White, modifier = Modifier.padding(5.dp))
+        Text(text = textId, color = Color.White, modifier = Modifier.padding(5.dp))
     }
 
 }
@@ -121,38 +134,56 @@ fun UserForm(navController: NavController) {
     val phoneNumber = rememberSaveable {
         mutableStateOf("")
     }
-    val valid = remember(email.value, userName.value,phoneNumber.value) {
+    val valid = remember(email.value, userName.value, phoneNumber.value) {
         email.value.trim().isNotEmpty() && userName.value.trim().isNotEmpty()
                 && phoneNumber.value.trim().isNotEmpty() && Patterns.EMAIL_ADDRESS
-            .matcher(email.value).matches()
+            .matcher(email.value).matches() &&
+                (navController.context as MainActivity).isValidPhoneNumber(phoneNumber.value)
     }
-    Column(Modifier
-        .height(250.dp)
-        .background(MaterialTheme.colors.background)
-        .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        Modifier
+            .height(250.dp)
+            .background(MaterialTheme.colors.background)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
-    UserNameInput(nameState = userName, onAction = KeyboardActions {
-    })
-    NumberInput(numberState = phoneNumber, onAction = KeyboardActions {
-    })
-    EmailInput(emailState = email, onAction = KeyboardActions {
-    })
+        UserNameInput(nameState = userName, onAction = KeyboardActions {
+        })
+        NumberInput(numberState = phoneNumber, onAction = KeyboardActions {
+        })
+        EmailInput(emailState = email, onAction = KeyboardActions {
+        })
     }
 
     SubmitButton("Register",
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black), onClick = {
-            if(valid){
-                navController.navigate(RYDXScreens.OTPVerificationScreen.name)
-            }else{
-                Toast.makeText(navController.context,
-                    "Please check your entries!",
-                    Toast.LENGTH_LONG).show()
+            if ((navController.context as MainActivity).isNetworkAvailable()) {
+                if (valid) {
+                    val user = User(
+                        email = email.value,
+                        userName = userName.value,
+                        phoneNumber = phoneNumber.value
+                    )
+                    myFirestoreUser.createUser(user,navController)
+                    navController.navigate(RYDXScreens.LoginScreen.name)
+                } else {
+                    Toast.makeText(
+                        navController.context,
+                        "Please check your entries!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } else {
+                Toast.makeText(
+                    navController.context,
+                    "Please check Internet connection",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        }
-
-    )
+        })
 }
+
 @Composable
 fun EmailInput(
     modifier: Modifier = Modifier,
@@ -170,6 +201,7 @@ fun EmailInput(
         onAction = onAction
     )
 }
+
 @Composable
 fun NumberInput(
     modifier: Modifier = Modifier,
@@ -205,6 +237,7 @@ fun UserNameInput(
         onAction = onAction
     )
 }
+
 @Composable
 fun InputField(
     modifier: Modifier = Modifier,
@@ -227,5 +260,4 @@ fun InputField(
         keyboardActions = onAction
     )
 }
-
 

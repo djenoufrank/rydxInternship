@@ -25,6 +25,4 @@ enum class RYDXScreens {
             else -> throw IllegalArgumentException("Route $route is not recognized")
         }
     }
-
-
 }

@@ -36,17 +36,18 @@ fun RYDXSplashScreen(navController: NavController = NavController(context = Loca
         Animatable(0.0f)
     }
     Surface(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .scale(scale.value)
     ) {
 
-    Image(
-        painter = painterResource(R.drawable.img),
-        contentDescription = "splash image",
-        modifier = Modifier.fillMaxSize()
-    )
+        Image(
+            painter = painterResource(R.drawable.img),
+            contentDescription = "splash image",
+            modifier = Modifier.fillMaxSize()
+        )
 
-}
+    }
     LaunchedEffect(key1 = true) {
         scale.animateTo(
             targetValue = 0.7f,

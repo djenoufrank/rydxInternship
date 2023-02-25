@@ -1,14 +1,17 @@
 package com.example.rydx.viewModels
 
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
 import com.example.rydx.models.User
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.ktx.toObject
 
 class CloudFirebaseUserViewModel : ViewModel() {
     private val database = Firebase.firestore
@@ -17,27 +20,9 @@ class CloudFirebaseUserViewModel : ViewModel() {
     private lateinit var usersRegistration: ListenerRegistration
 
 
-    fun connexionUsersValueChanges(number :String): Boolean{
-
-        usersRegistration = database.collection("users")
-            .addSnapshotListener(EventListener { value, error ->
-                if (error != null || value == null) {
-                    return@EventListener
-                }
-                if (!value.isEmpty) {
-                    val users = ArrayList<User>()
-                    for (doc in value) {
-                        if(doc.id==number){
-                        val user = doc.toObject(User::class.java)
-                        users.add(user)
-                    }
-                        break
-                    }
-                    userIsKnow.postValue(users)
-
-                    }
-            })
-        return userIsKnow.value.isNullOrEmpty()
+    fun connexionUsersValueChanges(number: String): Boolean {
+        val docRef = database.collection("users").document(number)
+        return docRef.id == number
     }
 
     fun stopListeningForUserChanges() = usersRegistration.remove()
@@ -66,4 +51,24 @@ class CloudFirebaseUserViewModel : ViewModel() {
             })
     }
 
+    fun createUser(user: User, navController: NavController) {
+        val db = Firebase.firestore
+        user.phoneNumber?.let {
+            db.collection("users").document(it).set(user)
+                .addOnSuccessListener {
+                    Toast.makeText(
+                        navController.context,
+                        "Account created successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(
+                        navController.context,
+                        "Error adding user!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+        }
+    }
 }

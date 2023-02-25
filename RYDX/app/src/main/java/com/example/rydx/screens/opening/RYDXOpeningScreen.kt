@@ -19,15 +19,21 @@ import com.example.rydx.navigation.RYDXScreens
 @Composable
 fun RYDXOpeningScreen(navController: NavController = NavController(context = LocalContext.current)) {
 
-    Surface(modifier = Modifier.fillMaxSize(),color=Color.White) {
+    Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
         Column(
-            modifier = Modifier.fillMaxWidth().heightIn(0.dp,400.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(0.dp, 400.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
             val image = painterResource(R.drawable.img)
-            Image(painter = image,contentDescription = "image logo",
-                modifier = Modifier.fillMaxWidth().heightIn(0.dp,400.dp))
+            Image(
+                painter = image, contentDescription = "image logo",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(0.dp, 400.dp)
+            )
         }
 
         Column(
@@ -38,8 +44,10 @@ fun RYDXOpeningScreen(navController: NavController = NavController(context = Loc
             Spacer(modifier = Modifier.height(100.dp))
             Logo()
             Spacer(modifier = Modifier.height(20.dp))
-            Text(text="Now your finances are in one place and \n" +
-                    "                always under control", color = Color.Black)
+            Text(
+                text = "Now your finances are in one place and \n" +
+                        "                always under control", color = Color.Black
+            )
 
         }
         Column(
@@ -56,12 +64,14 @@ fun RYDXOpeningScreen(navController: NavController = NavController(context = Loc
 private fun Bottom(navController: NavController) {
     SubmitButton("Sign In",
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black), onClick = {
-            navController.navigate(RYDXScreens.LoginScreen.name)})
+            navController.navigate(RYDXScreens.LoginScreen.name)
+        })
     Spacer(modifier = Modifier.height(10.dp))
     SubmitButton(
         textId = "Create Account",
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.White), onClick = {
-            navController.navigate(RYDXScreens.RegisterScreen.name)})
+            navController.navigate(RYDXScreens.RegisterScreen.name)
+        })
 }
 
 @Composable
@@ -74,23 +84,26 @@ fun Logo() {
 }
 
 @Composable
-fun SubmitButton(textId: String,
-                 colors:ButtonColors,
-                 onClick: () -> Unit) {
+fun SubmitButton(
+    textId: String,
+    colors: ButtonColors,
+    onClick: () -> Unit
+) {
     Button(
         onClick = onClick,
         modifier = Modifier
             .padding(3.dp)
             .fillMaxWidth(),
-        elevation =  ButtonDefaults.elevation(
+        elevation = ButtonDefaults.elevation(
             defaultElevation = 10.dp,
             pressedElevation = 15.dp,
-            disabledElevation = 0.dp),
-        colors =colors
+            disabledElevation = 0.dp
+        ),
+        colors = colors
     ) {
-        if(textId == "Create Account")
-        Text(text = textId,color = Color.Black, modifier = Modifier.padding(5.dp))
-        else Text(text = textId,color = Color.White, modifier = Modifier.padding(5.dp))
+        if (textId == "Create Account")
+            Text(text = textId, color = Color.Black, modifier = Modifier.padding(5.dp))
+        else Text(text = textId, color = Color.White, modifier = Modifier.padding(5.dp))
     }
 
 }
