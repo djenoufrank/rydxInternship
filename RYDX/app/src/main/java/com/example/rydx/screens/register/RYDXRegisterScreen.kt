@@ -16,11 +16,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -30,13 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.rydx.MainActivity
-import com.example.rydx.R
 import com.example.rydx.models.User
 import com.example.rydx.navigation.RYDXScreens
 import com.example.rydx.viewModels.CloudFirebaseUserViewModel
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.delay
 
 private val myFirestoreUser by lazy { CloudFirebaseUserViewModel() }
 
@@ -165,8 +159,17 @@ fun UserForm(navController: NavController) {
                         userName = userName.value,
                         phoneNumber = phoneNumber.value
                     )
-                    myFirestoreUser.createUser(user,navController)
-                    navController.navigate(RYDXScreens.LoginScreen.name)
+                    if(myFirestoreUser.connexionUsersValueChanges(phoneNumber.value)){
+                        Toast.makeText(
+                            navController.context,
+                            "Please go to a LogIn page",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }else{
+                        myFirestoreUser.createUser(user,navController)
+                        navController.navigate(RYDXScreens.LoginScreen.name)
+                    }
+
                 } else {
                     Toast.makeText(
                         navController.context,
