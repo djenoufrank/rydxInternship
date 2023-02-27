@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.text.TextUtils
 import android.util.Log
-import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -25,10 +24,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import com.example.rydx.MainActivity
-import com.example.rydx.models.User
 import com.example.rydx.navigation.RYDXScreens
 import com.example.rydx.viewModels.CloudFirebaseUserViewModel
 import com.google.firebase.FirebaseException
@@ -37,14 +34,13 @@ import java.util.concurrent.TimeUnit
 
 val mAuth: FirebaseAuth = FirebaseAuth.getInstance()
 lateinit var callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks
-private var userListFireBase = mutableListOf<User>()
 private val myFirestoreUser by lazy { CloudFirebaseUserViewModel() }
 private var number: String = ""
 
 @Preview
 @Composable
 fun RYDXLoginScreen(navController: NavController = NavController(context = LocalContext.current)) {
-    listenForUsersUpdates(navController)
+
 
     val stateIndication = rememberSaveable {
         mutableStateOf("")
@@ -56,9 +52,6 @@ fun RYDXLoginScreen(navController: NavController = NavController(context = Local
         mutableStateOf("")
     }
     val verificationID = remember {
-        mutableStateOf("")
-    }
-    val message = remember {
         mutableStateOf("")
     }
 
@@ -73,7 +66,7 @@ fun RYDXLoginScreen(navController: NavController = NavController(context = Local
             Spacer(modifier = Modifier.height(100.dp))
             PhoneNumberInput(stateIndication, phoneNumber)
         }
-        ToOtp(otp, navController, verificationID, mAuth, message)
+        ToOtp(otp, navController, verificationID, mAuth)
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -183,19 +176,17 @@ private fun PhoneNumberInput(
 @Composable
 fun ToOtp(
     otp: MutableState<String>, navController: NavController,
-    verificationID: MutableState<String>, mAuth: FirebaseAuth,
-    message: MutableState<String>
+    verificationID: MutableState<String>, mAuth: FirebaseAuth
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(80.dp))
-        OtpFields(otp, navController, verificationID, mAuth, message)
+        OtpFields(otp, navController, verificationID, mAuth)
         callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             override fun onVerificationCompleted(p0: PhoneAuthCredential) {
-                if (myFirestoreUser.connexionUsersValueChanges(number)) {
-                    myFirestoreUser.stopListeningForUserChanges()
+                if (myFirestoreUser.connexionUser(number)) {
                     navController.navigate(RYDXScreens.HomeScreen.name)
                 } else {
                     Toast.makeText(
@@ -208,7 +199,7 @@ fun ToOtp(
 
             //for format phone verification by firebase
             override fun onVerificationFailed(p0: FirebaseException) {
-                Toast.makeText(navController.context,  "Fail to verify user : \n" + p0.message, Toast.LENGTH_SHORT)
+                Toast.makeText(navController.context,  "Fail to verify user : \n"+ p0.message, Toast.LENGTH_SHORT)
                     .show()
             }
 
@@ -229,8 +220,7 @@ private fun OtpFields(
     otp: MutableState<String>,
     navController: NavController,
     verificationID: MutableState<String>,
-    mAuth: FirebaseAuth,
-    message: MutableState<String>
+    mAuth: FirebaseAuth
 ) {
     TextField(
         value = otp.value,
@@ -251,7 +241,9 @@ private fun OtpFields(
         onClick = {
             if ((navController.context as MainActivity).isNetworkAvailable()) {
                 if (TextUtils.isEmpty(otp.value)) {
-                    Toast.makeText(navController.context, "Please enter otp..", Toast.LENGTH_SHORT)
+                    Toast.makeText(navController.context,
+                        "Please enter otp..",
+                        Toast.LENGTH_SHORT)
                         .show()
                 } else {
                     // on below line generating phone credentials.
@@ -345,9 +337,9 @@ private fun signInWithPhoneAuthCredential(
         .addOnCompleteListener(activity) { task ->
 
             if (task.isSuccessful) {
-
-                if (myFirestoreUser.connexionUsersValueChanges(number)) {
-                    myFirestoreUser.stopListeningForUserChanges()
+                myFirestoreUser.connexionUser(number)
+                Log.d("fd","yep ${myFirestoreUser.getValue()}")
+                if (myFirestoreUser.getValue()) {
                     navController.navigate(RYDXScreens.HomeScreen.name)
                 } else {
                     Toast.makeText(
@@ -384,17 +376,5 @@ private fun sendVerificationCode(
         .setCallbacks(callbacks)
         .build()
     PhoneAuthProvider.verifyPhoneNumber(options)
-}
-
-private fun listenForUsersUpdates(navController: NavController) {
-    myFirestoreUser.onUsersValuesChange()
-        .observe(navController.context as MainActivity, Observer(::onUsersUpdate))
-}
-
-private fun onUsersUpdate(users: List<User>) {
-    userListFireBase.clear()
-    for (user in users) {
-        userListFireBase.add(user)
-    }
 }
 

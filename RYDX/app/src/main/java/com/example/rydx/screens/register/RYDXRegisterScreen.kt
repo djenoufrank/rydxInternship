@@ -159,7 +159,7 @@ fun UserForm(navController: NavController) {
                         userName = userName.value,
                         phoneNumber = phoneNumber.value
                     )
-                    if(myFirestoreUser.connexionUsersValueChanges(phoneNumber.value)){
+                    if(myFirestoreUser.connexionUser(phoneNumber.value)){
                         Toast.makeText(
                             navController.context,
                             "Please go to a LogIn page",
@@ -263,4 +263,3 @@ fun InputField(
         keyboardActions = onAction
     )
 }
-
