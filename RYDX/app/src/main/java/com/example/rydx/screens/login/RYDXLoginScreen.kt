@@ -336,10 +336,8 @@ private fun signInWithPhoneAuthCredential(
     auth.signInWithCredential(credential)
         .addOnCompleteListener(activity) { task ->
 
-            if (task.isSuccessful) {
-                myFirestoreUser.connexionUser(number)
-                Log.d("fd","yep ${myFirestoreUser.getValue()}")
-                if (myFirestoreUser.getValue()) {
+            if (task.isSuccessful) {             
+                if (myFirestoreUser.connexionUser(number)) {
                     navController.navigate(RYDXScreens.HomeScreen.name)
                 } else {
                     Toast.makeText(
