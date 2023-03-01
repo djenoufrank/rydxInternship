@@ -8,6 +8,7 @@ enum class RYDXScreens {
     OTPVerificationScreen,
     HomeScreen,
     SearchScreen,
+    DetailsScreenCar,
     FilterScreen;
 
     companion object {
@@ -21,6 +22,7 @@ enum class RYDXScreens {
             HomeScreen.name -> HomeScreen
             SearchScreen.name -> SearchScreen
             FilterScreen.name -> FilterScreen
+            DetailsScreenCar.name -> DetailsScreenCar
             null -> HomeScreen
             else -> throw IllegalArgumentException("Route $route is not recognized")
         }

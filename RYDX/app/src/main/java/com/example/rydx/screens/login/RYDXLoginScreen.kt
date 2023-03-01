@@ -336,7 +336,7 @@ private fun signInWithPhoneAuthCredential(
     auth.signInWithCredential(credential)
         .addOnCompleteListener(activity) { task ->
 
-            if (task.isSuccessful) {             
+            if (task.isSuccessful) {
                 if (myFirestoreUser.connexionUser(number)) {
                     navController.navigate(RYDXScreens.HomeScreen.name)
                 } else {

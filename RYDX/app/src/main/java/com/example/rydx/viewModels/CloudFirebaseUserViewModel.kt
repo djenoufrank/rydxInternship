@@ -9,12 +9,10 @@ import androidx.navigation.NavController
 import com.example.rydx.models.User
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import okhttp3.internal.notify
 
 
 class CloudFirebaseUserViewModel : ViewModel() {
     private val database = Firebase.firestore
-    //private var values = MutableLiveData<Boolean>()
     fun connexionUser(number: String):Boolean{
         val docRef = database.collection("users").document(number)
         return docRef.id == number
